@@ -663,54 +663,32 @@ def halaman_login(profil=None, cm=None):
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        tab1, tab2 = st.tabs(["Login", "Daftar Owner"])
-        
-        with tab1:
-            with st.form("login_form"):
-                email = st.text_input("Email", placeholder="admin@example.com")
-                password = st.text_input("Password", type="password", placeholder="••••••••")
-                submitted = st.form_submit_button("MASUK KE DASHBOARD", type="primary")
-                
-                if submitted:
-                    if not email or not password:
-                        st.error("Email dan Password wajib diisi!")
-                    else:
-                        with st.spinner("Autentikasi..."):
-                            try:
-                                res = db.login_user(email, password)
-                                st.session_state.authenticated = True
-                                st.session_state.user = res.user
-                                
-                                # Simpan cookie untuk Remember Me (7 hari)
-                                if cm:
-                                    expiry = datetime.now() + timedelta(days=7)
-                                    cm.set("sb_access_token", res.session.access_token, expires_at=expiry)
-                                    cm.set("sb_refresh_token", res.session.refresh_token, expires_at=expiry)
-                                
-                                st.success("Login Berhasil!")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Gagal Login: {str(e)}")
-
-        with tab2:
-            st.info("ℹ️ Gunakan menu ini untuk membuat akun admin pertama Anda.")
-            with st.form("signup_form"):
-                new_email = st.text_input("Email Baru", placeholder="email@tokoanda.com")
-                new_password = st.text_input("Password Baru", type="password")
-                confirm = st.text_input("Konfirmasi Password", type="password")
-                signup_btn = st.form_submit_button("BUAT AKUN")
-                
-                if signup_btn:
-                    if new_password != confirm:
-                        st.error("Konfirmasi password tidak cocok!")
-                    elif len(new_password) < 6:
-                        st.error("Password minimal 6 karakter!")
-                    else:
+        # Tab 'Daftar Owner' disembunyikan untuk keamanan deployment
+        with st.form("login_form"):
+            email = st.text_input("Email", placeholder="admin@example.com")
+            password = st.text_input("Password", type="password", placeholder="••••••••")
+            submitted = st.form_submit_button("MASUK KE DASHBOARD", type="primary")
+            
+            if submitted:
+                if not email or not password:
+                    st.error("Email dan Password wajib diisi!")
+                else:
+                    with st.spinner("Autentikasi..."):
                         try:
-                            db.daftar_user(new_email, new_password)
-                            st.success("✅ Pendaftaran berhasil! Silakan coba login.")
+                            res = db.login_user(email, password)
+                            st.session_state.authenticated = True
+                            st.session_state.user = res.user
+                            
+                            # Simpan cookie untuk Remember Me (7 hari)
+                            if cm:
+                                expiry = datetime.now() + timedelta(days=7)
+                                cm.set("sb_access_token", res.session.access_token, expires_at=expiry)
+                                cm.set("sb_refresh_token", res.session.refresh_token, expires_at=expiry)
+                            
+                            st.success("Login Berhasil!")
+                            st.rerun()
                         except Exception as e:
-                            st.error(f"Gagal Daftar: {str(e)}")
+                            st.error(f"Gagal Login: {str(e)}")
 
 
 # ═══════════════════════════════════════════════════════════
