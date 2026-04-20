@@ -657,7 +657,7 @@ def halaman_login(profil=None, cm=None):
     st.markdown(f"""
     <div style="text-align: center; padding: 2rem 0;">
         <h1 style="color: #1D9E75; margin-bottom: 0;">{nama_toko}</h1>
-        <p style="color: #666; font-size: 1.1rem;">ERP System Dashboard</p>
+        <p style="color: #666; font-size: 1.1rem;">ERP System by haniffraihan</p>
     </div>
     """, unsafe_allow_html=True)
 
