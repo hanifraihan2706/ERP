@@ -1,0 +1,37 @@
+Bagian 1: Rencana Eksekusi (The Strategy)
+Database Update: Tambahkan kolom customer_email pada tabel tabel_transaksi_sales.
+
+Environment Variables: Tambahkan kredensial SMTP (Gmail App Password) di file .env.
+
+New Service Module: Buat file email_service.py untuk menangani logika pengiriman email (mirip dengan telegram_notif.py).
+
+UI Modification: Update form di app.py bagian halaman_pos untuk menangkap input email.
+
+Logic Integration: Panggil fungsi pengiriman email tepat setelah transaksi berhasil disimpan ke database.
+Gunakan prompt di bawah ini. Prompt ini sudah saya desain agar AI memahami struktur file Anda yang modular:
+
+Prompt:
+
+"Saya memiliki proyek ERP UMKM Cuci Sepatu berbasis Streamlit dan Supabase. Saya ingin menambahkan fitur Kirim Struk Otomatis via Email kepada customer segera setelah transaksi dibuat.
+
+Berikut adalah struktur file saya saat ini:
+
+app.py (UI & Flow utama)
+
+database.py (Interaksi Supabase)
+
+telegram_notif.py (Notifikasi Telegram)
+
+ui_components.py (Komponen UI termasuk fungsi generate_nota)
+
+Tugas Anda:
+
+Buatkan modul baru bernama email_service.py yang menggunakan smtplib. Modul ini harus memiliki fungsi untuk mengirim email dalam format HTML yang rapi, berisi detail transaksi (Nama, Layanan, Harga, Status). Gunakan os.getenv untuk mengambil kredensial email.
+
+Berikan instruksi SQL untuk menambah kolom customer_email pada tabel tabel_transaksi_sales.
+
+Berikan perubahan kode pada app.py (di fungsi halaman_pos) untuk menambahkan input email di form dan memicu pengiriman email setelah transaksi berhasil disimpan.
+
+Pastikan integrasi ini tidak mengganggu flow Telegram yang sudah ada.
+
+Gunakan pendekatan 'asynchronous' atau minimal jangan sampai membuat UI Streamlit hang saat mengirim email."
