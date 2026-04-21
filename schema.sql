@@ -98,8 +98,12 @@ DECLARE
     stok_cukup BOOLEAN := TRUE;
     stok_kurang TEXT := '';
 BEGIN
-    -- Hanya jalankan jika status berubah MENJADI 'Cuci'
-    IF NEW.status = 'Cuci' AND (OLD.status IS DISTINCT FROM 'Cuci') THEN
+    -- Jalankan jika:
+    -- 1. INSERT baru dengan status 'Cuci'
+    -- 2. UPDATE status MENJADI 'Cuci' (dari status lain)
+    IF (TG_OP = 'INSERT' AND NEW.status = 'Cuci') OR 
+       (TG_OP = 'UPDATE' AND NEW.status = 'Cuci' AND OLD.status IS DISTINCT FROM 'Cuci') 
+    THEN
         -- Cek dulu apakah semua stok cukup
         FOR bom_row IN
             SELECT bb.nama_bahan, bb.stok_saat_ini, b.jumlah_pemakaian
@@ -137,7 +141,7 @@ $$ LANGUAGE plpgsql;
 -- Pasang trigger ke tabel transaksi
 DROP TRIGGER IF EXISTS trigger_potong_stok ON tabel_transaksi_sales;
 CREATE TRIGGER trigger_potong_stok
-    BEFORE UPDATE ON tabel_transaksi_sales
+    BEFORE INSERT OR UPDATE ON tabel_transaksi_sales
     FOR EACH ROW EXECUTE FUNCTION potong_stok_bom();
 
 -- ── DATA AWAL ──

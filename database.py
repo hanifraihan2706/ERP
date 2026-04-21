@@ -68,6 +68,34 @@ def restore_session_user(access_token: str, refresh_token: str):
         return None
 
 
+def recover_session(refresh_token: str):
+    """Pulihkan sesi hanya menggunakan refresh_token"""
+    sb = get_supabase()
+    try:
+        # refresh_session akan menukarkan refresh_token lama dengan session baru
+        res = sb.auth.refresh_session(refresh_token)
+        return res
+    except Exception as e:
+        print(f"DEBUG: Gagal recover sesi: {e}")
+        return None
+
+
+def validate_user_email(email: str):
+    """
+    Validasi email user (Mockup untuk persistent login).
+    Di produksi, sebaiknya cek ke tabel 'profiles' atau 'users' khusus.
+    """
+    if not email or "@" not in email:
+        return None
+    # Kembalikan objek yang menyerupai res.user dari Supabase
+    class MockUser:
+        def __init__(self, email):
+            self.email = email
+            self.id = "mock_id" # Bisa disesuaikan jika ada ID real
+            
+    return MockUser(email)
+
+
 def daftar_user(email: str, password: str):
     """Daftar user baru (untuk registrasi awal/admin)"""
     sb = get_supabase()
@@ -169,15 +197,24 @@ def delete_bom(bom_id: int) -> bool:
 
 # ─── TRANSAKSI SALES ────────────────────────────────────────
 
-def get_all_transaksi(limit: int = 100, status_filter: Optional[str] = None) -> list[dict]:
+def get_all_transaksi(limit: int = 100, offset: int = 0, status_filter: Optional[str] = None) -> list[dict]:
     sb = get_supabase()
     q = (sb.table("tabel_transaksi_sales")
          .select("*, tabel_layanan(nama_layanan, estimasi_hari)")
          .order("created_at", desc=True)
-         .limit(limit))
+         .range(offset, offset + limit - 1))
     if status_filter and status_filter != "Semua":
         q = q.eq("status", status_filter)
     return q.execute().data or []
+
+
+def get_total_transaksi_count(status_filter: Optional[str] = None) -> int:
+    sb = get_supabase()
+    q = sb.table("tabel_transaksi_sales").select("*", count="exact")
+    if status_filter and status_filter != "Semua":
+        q = q.eq("status", status_filter)
+    res = q.execute()
+    return res.count if res.count is not None else 0
 
 
 def get_transaksi_aktif() -> list[dict]:
@@ -194,6 +231,11 @@ def get_transaksi_aktif() -> list[dict]:
 def buat_transaksi(customer: str, wa: str, layanan_id: int,
                     total: int, foto_url: str = "", catatan: str = "",
                     email: str = "") -> dict:
+    """
+    Buat transaksi baru. 
+    NOTE: Trigger 'trigger_potong_stok' di DB otomatis memotong stock bahan baku 
+    jika status awal adalah 'Cuci'.
+    """
     sb = get_supabase()
     res = sb.table("tabel_transaksi_sales").insert({
         "customer_name": customer,
@@ -210,7 +252,11 @@ def buat_transaksi(customer: str, wa: str, layanan_id: int,
 
 
 def update_status_transaksi(trx_id: int, status_baru: str) -> dict:
-    """Trigger potong stok di DB jika status → Cuci"""
+    """
+    Update status pengerjaan.
+    NOTE: Trigger 'trigger_potong_stok' di DB otomatis memotong stock bahan baku 
+    jika status berubah menjadi 'Cuci'.
+    """
     sb = get_supabase()
     res = (sb.table("tabel_transaksi_sales")
            .update({"status": status_baru})
@@ -283,7 +329,7 @@ def hitung_keuangan_bulan(bulan: int, tahun: int) -> dict:
     bahan_terpakai = 0
     for t in trx:
         tgl = parse_iso(t["created_at"])
-        if tgl.month == bulan and tgl.year == tahun and t["status"] in ["Cuci", "Selesai", "Sudah diambil"]:
+        if tgl.month == bulan and tgl.year == tahun and t["status"] in ["Cuci", "Selesai", "Diambil"]:
             if t.get("layanan_id"):
                 bom = get_bom_by_layanan(t["layanan_id"])
                 for b in bom:

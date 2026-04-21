@@ -35,27 +35,28 @@ def fmt_rupiah(angka: int) -> str:
 
 
 def metric_card(label: str, value: str, delta: str = "", color: str = "#1D9E75"):
-    """KPI card dengan warna custom"""
+    """KPI card dengan warna custom dan efek hover"""
     st.markdown(f"""
-    <div style="
+    <div class="kpi-card" style="
         background: {color}15;
         border-left: 4px solid {color};
-        border-radius: 8px;
-        padding: 14px 16px;
-        margin-bottom: 8px;
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
     ">
-        <div style="font-size:12px;color:#666;margin-bottom:4px">{label}</div>
-        <div style="font-size:22px;font-weight:700;color:{color}">{value}</div>
-        {"<div style='font-size:11px;color:#999;margin-top:2px'>" + delta + "</div>" if delta else ""}
+        <div style="font-size:13px;color:#666;margin-bottom:6px">{label}</div>
+        <div style="font-size:26px;font-weight:800;color:{color}">{value}</div>
+        {"<div style='font-size:12px;color:#999;margin-top:4px'>" + delta + "</div>" if delta else ""}
     </div>
     """, unsafe_allow_html=True)
 
 
 def status_badge(status: str) -> str:
     color_map = {
-        "Cuci":    ("#3B82F6", "#DBEAFE"),
-        "Selesai": ("#10B981", "#D1FAE5"),
-        "Sudah diambil": ("#6B7280", "#F3F4F6"),
+        "Cuci":    ("#3B82F6", "#DBEAFE"), # Blue
+        "Selesai": ("#10B981", "#D1FAE5"), # Green
+        "Diambil": ("#6B7280", "#F3F4F6"),
     }
     fg, bg = color_map.get(status, ("#000", "#eee"))
     return (f'<span style="background:{bg};color:{fg};padding:3px 10px;'
@@ -65,14 +66,14 @@ def status_badge(status: str) -> str:
 def generate_nota(trx: dict, layanan_nama: str, shop_profile: dict = None) -> str:
     """Generate nota digital sebagai string markdown"""
     tgl = parse_iso(trx["created_at"])
-    paid = "✅ LUNAS" if trx["is_paid"] else "⏳ BELUM BAYAR"
+    paid = "LUNAS" if trx["is_paid"] else "BELUM BAYAR"
     
     shop_name = shop_profile.get("nama_toko", "ERP Cuci Sepatu") if shop_profile else "ERP Cuci Sepatu"
     shop_addr = shop_profile.get("alamat", "") if shop_profile else ""
     
     return f"""
 ---
-### 🧾 {shop_name.upper()}
+### {shop_name.upper()}
 **No. Order:** `#{trx['id']:05d}`
 **Tanggal:** {tgl.strftime('%d %B %Y, %H:%M')}
 
@@ -88,8 +89,8 @@ def generate_nota(trx: dict, layanan_nama: str, shop_profile: dict = None) -> st
 
 _{trx.get('catatan', '')}_
 
-{f'📍 *{shop_addr}*' if shop_addr else ""}
-*Terima kasih telah mempercayakan sepatu Anda kepada kami!* 👟✨
+{f'* {shop_addr}*' if shop_addr else ""}
+*Terima kasih telah mempercayakan sepatu Anda kepada kami!*
 ---
 """
 
@@ -123,11 +124,11 @@ def confirm_dialog(key: str, label: str) -> bool:
     else:
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("✅ Ya, lanjutkan", key=f"btn_yes_{key}", type="primary"):
+            if st.button("Ya, lanjutkan", key=f"btn_yes_{key}", type="primary"):
                 st.session_state[f"confirm_{key}"] = False
                 return True
         with col2:
-            if st.button("❌ Batal", key=f"btn_no_{key}"):
+            if st.button("Batal", key=f"btn_no_{key}"):
                 st.session_state[f"confirm_{key}"] = False
                 st.rerun()
         return False
