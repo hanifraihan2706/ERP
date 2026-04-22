@@ -182,8 +182,10 @@ def halaman_dashboard(profil=None):
             </div>
             """, unsafe_allow_html=True)
             if st.button("MULAI ORDER SEKARANG", type="primary", use_container_width=True):
-                # [PERF] FIX 6: Simplified Routing
                 st.session_state.current_page = "order_baru"
+                # Clear radio state to force sync
+                if "nav_public" in st.session_state: del st.session_state["nav_public"]
+                if "nav_owner" in st.session_state: del st.session_state["nav_owner"]
                 st.rerun()
 
         with col2:
@@ -196,6 +198,9 @@ def halaman_dashboard(profil=None):
             """, unsafe_allow_html=True)
             if st.button("PANTAU STATUS PENGERJAAN", type="secondary", use_container_width=True):
                 st.session_state.current_page = "order_status"
+                # Clear radio state to force sync
+                if "nav_public" in st.session_state: del st.session_state["nav_public"]
+                if "nav_owner" in st.session_state: del st.session_state["nav_owner"]
                 st.rerun()
 
         st.markdown("---")
@@ -345,6 +350,10 @@ def fragment_order_list(is_owner, profil):
     total_count = cached_total_transaksi_count(status_filter=filter_status)
     total_pages = max(1, (total_count + PAGE_SIZE - 1) // PAGE_SIZE)
     
+    # [STABILITY] Reset page to 1 if current page exceeds total_pages (e.g. after filter change)
+    if st.session_state.get("page_nav", 1) > total_pages:
+        st.session_state["page_nav"] = 1
+
     col_p1, col_p2 = st.columns([3, 1])
     with col_p2:
         page = st.number_input("Halaman", min_value=1, max_value=total_pages, step=1, key="page_nav")
