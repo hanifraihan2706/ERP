@@ -81,14 +81,17 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('foto-sepatu', 'foto-sepatu', TRUE)
 ON CONFLICT DO NOTHING;
 
--- ── STORAGE POLICY: siapa saja bisa upload & lihat ──
+-- ── STORAGE POLICY: baca publik, upload hanya untuk authenticated user ──
 DROP POLICY IF EXISTS "Public foto read" ON storage.objects;
 CREATE POLICY "Public foto read" ON storage.objects
     FOR SELECT USING (bucket_id = 'foto-sepatu');
 
 DROP POLICY IF EXISTS "Public foto upload" ON storage.objects;
-CREATE POLICY "Public foto upload" ON storage.objects
-    FOR INSERT WITH CHECK (bucket_id = 'foto-sepatu');
+CREATE POLICY "Authenticated foto upload" ON storage.objects
+    FOR INSERT WITH CHECK (
+        bucket_id = 'foto-sepatu'
+        AND auth.role() = 'authenticated'
+    );
 
 -- ── FUNCTION: potong stok otomatis saat status → Cuci ──
 CREATE OR REPLACE FUNCTION potong_stok_bom()
